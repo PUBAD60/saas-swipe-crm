@@ -27,6 +27,9 @@ h2{margin:0 0 4px;font-size:22px}h3{font-size:12px;text-transform:uppercase;lett
 .kv{display:grid;grid-template-columns:110px 1fr;gap:6px 12px}.kv div:nth-child(odd){color:var(--mute)}
 .sw{display:inline-block;width:14px;height:14px;border-radius:4px;border:1px solid var(--line);vertical-align:-2px;margin-right:6px}
 .tabs button{margin-right:6px}.tabs button.on{background:var(--bluebg);color:var(--blue);border-color:var(--blue)}
+.sws{display:flex;flex-direction:column;width:96px;border:1px solid var(--line);border-radius:8px;overflow:hidden;cursor:pointer;font-size:11px}.sws span{height:34px;display:block}.sws b{padding:3px 6px 0;font-family:ui-monospace,monospace}.sws i{padding:0 6px 4px;color:var(--mute);font-style:normal}
+.sec{border:1px solid var(--line);border-radius:10px;padding:10px 14px;margin:10px 0}.sec h4{margin:0 0 6px;font-size:14px}.al{display:grid;grid-template-columns:110px 1fr;gap:8px;margin:3px 0}.al b{color:var(--mute);font-weight:500}.q{font-size:17px;font-weight:600;margin:4px 0 8px}.flow{padding-left:18px;margin:6px 0}.flow li{margin:3px 0}.pre{white-space:pre-wrap;background:var(--bg);border:1px solid var(--line);border-radius:8px;padding:10px;font-size:12.5px;margin:6px 0 0}
+details.tech{margin-top:22px;border-top:1px solid var(--line);padding-top:10px}details.tech>summary{cursor:pointer;color:var(--mute)}
 .note{background:var(--bg);border-left:3px solid var(--blue);padding:8px 12px;border-radius:0 8px 8px 0;margin:6px 0}
 .unv{border-left-color:var(--warn)}
 textarea{width:100%;min-height:90px}.row{display:flex;gap:8px;flex-wrap:wrap;align-items:center}
@@ -53,37 +56,62 @@ let crm={};try{crm=JSON.parse(localStorage.getItem('swipe-crm')||'{}')}catch(e){
 const save=()=>{try{localStorage.setItem('swipe-crm',JSON.stringify(crm))}catch(e){}};
 const C=id=>crm[id]||(crm[id]={rating:0,status:'To study',tags:'',note:''});
 const STAT=['To study','Studied','Using this','Skip'];
-const F={niche:'All',source:'All',theme:'All',status:'All',tag:'All',q:''};
+const F={niche:'All',source:'All',theme:'All',status:'All',tag:'All',pos:'All',hero:'All',page:'All',atheme:'All',vibe:'All',q:''};
+const A=s=>s.analysis||null;
 const TAGNAME={'hero-centered':'Centered hero','hero-left':'Left-aligned hero','hero-product-ui':'Product UI in hero','hero-3d-webgl':'3D / WebGL hero','hero-video':'Video hero','hero-email-capture':'Email capture hero','logo-strip-under-hero':'Logos under hero','bento':'Bento grid','feature-grid':'Feature grid','stats-band':'Stats band','testimonials':'Testimonials','pricing-on-home':'Pricing on home','faq':'FAQ','final-cta':'Final CTA','serif-headline':'Serif headline','italic-accent':'Italic accent','huge-headline':'Huge headline','tight-tracking':'Tight tracking','mono-labels':'Mono labels','gsap':'GSAP','smooth-scroll':'Smooth scroll','three-webgl':'Three.js','webgl-canvas':'Canvas/WebGL','framer':'Framer Motion','lottie':'Lottie','rive':'Rive','spline':'Spline','webflow':'Webflow','nextjs':'Next.js','astro':'Astro','sticky-nav':'Sticky nav','pill-buttons':'Pill buttons','sharp-buttons':'Sharp buttons','one-or-two-ctas':'1-2 hero CTAs','long-page':'Long page','short-page':'Short page','product-demo-section':'Product demo section','logo-wall':'Logo wall'};
 const shot=s=>s.capture&&s.capture.ok?`shots/${s.id}.jpg`:(s.vaultImg?`vault-img/${s.vaultImg}`:'');
+const VNAME={'v:bg-video':'BG: video','v:bg-canvas':'BG: WebGL','v:bg-image':'BG: image','v:bg-svg':'BG: SVG art','v:bg-gradient':'Gradient hero','v:gradients':'Uses gradients','v:grain':'Grain texture','v:grid-pattern':'Grid pattern','v:dot-grid':'Dot grid','v:glass':'Glassmorphism','v:alternating-sections':'Alternating sections','v:colourful':'Colourful','v:monochrome':'Monochrome','v:one-accent':'One accent colour','v:8px-grid':'8px spacing grid','v:narrow-column':'Narrow column','v:bordered':'Hairline borders','v:flat':'No shadows','v:glow-shadow':'Glow shadow','v:layered-shadow':'Layered shadows','v:shadowed':'Shadows','v:round-cards':'Round cards','v:sharp-corners':'Sharp corners','v:eyebrow-labels':'Eyebrow labels','v:icons-outline':'Outline icons','v:icons-solid':'Solid icons','v:icons-duotone':'Duotone icons','v:icon-tiles':'Icon tiles','v:emoji':'Emoji','v:few-icons':'Few icons','v:mockups':'Device mockups','v:svg-illustration':'SVG illustration','v:illustration':'3D/illustration assets','v:canvas':'Canvas/WebGL','v:avatars':'Avatar proof','v:marquee':'Marquee','v:scroll-reveal':'Scroll reveal','v:pinned-sections':'Pinned sections','v:motion-static':'Motion: static','v:motion-subtle':'Motion: subtle','v:motion-rich':'Motion: rich','v:motion-cinematic':'Motion: cinematic'};
+const tagName=t=>TAGNAME[t]||(t.startsWith('look:')?t.slice(5):VNAME[t]||null);
+const grp=t=>TAGNAME[t]?'p':t.startsWith('look:')?'l':VNAME[t]?'v':null;
 function facets(){
   const cnt=(f)=>{const m={};S.forEach(s=>f(s).forEach(v=>m[v]=(m[v]||0)+1));return m};
   const nm=cnt(s=>s.niches),sm=cnt(s=>[s.source]),tm=cnt(s=>[s.capture?.facts?.theme||'unknown']);
   const blk=(h,key,m)=>`<h4>${h}</h4>`+`<div class="nav ${F[key]=='All'?'on':''}" data-k="${key}" data-v="All">All <span>${S.length}</span></div>`+Object.entries(m).sort((a,b)=>b[1]-a[1]).map(([v,n])=>`<div class="nav ${F[key]==v?'on':''}" data-k="${key}" data-v="${esc(v)}">${esc(v)} <span>${n}</span></div>`).join('');
   const st={};S.forEach(s=>{const x=C(s.id).status;st[x]=(st[x]||0)+1});
-  const tgm={};S.forEach(s=>(s.insight?.tags||[]).forEach(t=>{if(TAGNAME[t])tgm[TAGNAME[t]]=(tgm[TAGNAME[t]]||0)+1}));
-  $('#side').innerHTML=`<h1>SaaS Swipe CRM</h1>`+blk('Niche','niche',nm)+blk('Pattern (what to steal)','tag',tgm)+blk('Source','source',sm)+blk('Theme (live)','theme',tm)+blk('My status','status',st);
+  const g={p:{},l:{},v:{}};S.forEach(s=>(s.insight?.tags||[]).forEach(t=>{const k=grp(t);if(k){const n=tagName(t);g[k][n]=(g[k][n]||0)+1}}));
+  const an=(f)=>cnt(s=>A(s)?f(A(s)).filter(Boolean):[]);
+  const lab=x=>String(x||'').split(/ \(|:/)[0].trim();
+  $('#side').innerHTML=`<h1>SaaS Swipe CRM</h1>`+blk('Niche','niche',nm)+blk('Positioning type','pos',an(a=>[lab(a.positioning?.type)]))+blk('Hero line type','hero',an(a=>[lab(a.hero?.headlineType)]))+blk('Page structure','page',an(a=>[lab(a.pageStructure?.type)]))+blk('Design theme','atheme',an(a=>[lab(a.design?.theme)]))+blk('Vibe','vibe',an(a=>(a.design?.vibe||[]).map(v=>String(v).toLowerCase())))
+   +`<details><summary style="margin:14px 8px 0;cursor:pointer;color:var(--mute);font-size:12px">Technical filters</summary>`+blk('Overall look','tag',g.l)+blk('Visual details','tag',g.v)+blk('Layout pattern','tag',g.p)+blk('Theme (live)','theme',tm)+`</details>`+blk('Source','source',sm)+blk('My status','status',st);
 }
 function pass(s){
   if(F.niche!='All'&&!s.niches.includes(F.niche))return false;
   if(F.source!='All'&&s.source!=F.source)return false;
   if(F.theme!='All'&&(s.capture?.facts?.theme||'unknown')!=F.theme)return false;
   if(F.status!='All'&&C(s.id).status!=F.status)return false;
-  if(F.tag!='All'&&!(s.insight?.tags||[]).some(t=>TAGNAME[t]==F.tag))return false;
-  if(F.q){const f=s.capture?.facts||{};const hay=[s.name,s.url,s.positioning,s.design,s.copy,(s.samNotes||[]).join(' '),f.h1,f.sub,f.description,C(s.id).note,C(s.id).tags].join(' ').toLowerCase();if(!F.q.toLowerCase().split(/\s+/).every(w=>hay.includes(w)))return false}
+  if(F.tag!='All'&&!(s.insight?.tags||[]).some(t=>tagName(t)==F.tag))return false;
+  const lab=x=>String(x||'').split(/ \(|:/)[0].trim(),a=A(s);
+  if(F.pos!='All'&&lab(a?.positioning?.type)!=F.pos)return false;
+  if(F.hero!='All'&&lab(a?.hero?.headlineType)!=F.hero)return false;
+  if(F.page!='All'&&lab(a?.pageStructure?.type)!=F.page)return false;
+  if(F.atheme!='All'&&lab(a?.design?.theme)!=F.atheme)return false;
+  if(F.vibe!='All'&&!(a?.design?.vibe||[]).some(v=>String(v).toLowerCase()==F.vibe))return false;
+  if(F.q){const f=s.capture?.facts||{};const hay=[a?JSON.stringify(a):'',s.name,s.url,s.positioning,s.design,s.copy,(s.samNotes||[]).join(' '),f.h1,f.sub,f.description,C(s.id).note,C(s.id).tags].join(' ').toLowerCase();if(!F.q.toLowerCase().split(/\s+/).every(w=>hay.includes(w)))return false}
   return true;
 }
 function render(){
   facets();
   let L=S.filter(pass);const so=$('#sort').value;
-  L.sort((a,b)=>so=='name'?a.name.localeCompare(b.name):so=='rating'?C(b.id).rating-C(a.id).rating:so=='craft'?(b.insight?.craft||0)-(a.insight?.craft||0):a.niches[0].localeCompare(b.niches[0])||a.name.localeCompare(b.name));
+  L.sort((a,b)=>so=='name'?a.name.localeCompare(b.name):so=='rating'?C(b.id).rating-C(a.id).rating:so=='craft'?(b.analysis?.craft||0)-(a.analysis?.craft||0):a.niches[0].localeCompare(b.niches[0])||a.name.localeCompare(b.name));
   $('#count').textContent=`${L.length} of ${S.length} sites`;
   $('#grid').innerHTML=L.map(s=>{const f=s.capture?.facts||{},c=C(s.id),im=shot(s);
     return `<div class="card" data-id="${s.id}"><div class="im" style="background-image:url('${im}')"></div><div class="b">
     <div class="t"><span>${esc(s.name)}</span><span class="stars">${'★'.repeat(c.rating)}</span></div>
-    <div class="d">${esc(f.h1||s.positioning||(s.samNotes||[])[0]||s.url)}</div>
-    ${s.niches.map(n=>`<span class="chip blue">${esc(n)}</span>`).join('')}${f.theme?`<span class="chip">${f.theme}</span>`:''}${s.capture&&!s.capture.ok?'<span class="chip warn">no live capture</span>':''}${s.source=='added'?'<span class="chip">added</span>':''}</div></div>`}).join('');
+    <div class="d">${esc(A(s)?.oneLiner||f.h1||s.positioning||(s.samNotes||[])[0]||s.url)}</div>
+    ${s.niches.map(n=>`<span class="chip blue">${esc(n)}</span>`).join('')}${A(s)?`<span class="chip">${esc(String(A(s).design?.theme||'').split(' (')[0])}</span>`:(f.theme?`<span class="chip">${f.theme}</span>`:'')}${s.capture&&!s.capture.ok?'<span class="chip warn">no live capture</span>':''}${s.source=='added'?'<span class="chip">added</span>':''}</div></div>`}).join('');
 }
+const li=a=>a&&a.length?`<ul>${a.map(x=>`<li>${esc(x)}</li>`).join('')}</ul>`:'';
+const row=(k,v)=>v?`<div class="al"><b>${k}</b><span>${esc(v)}</span></div>`:'';
+function libBlock(s){const a=A(s);if(!a)return '';const p=a.positioning||{},h=a.hero||{},pg=a.pageStructure||{},d=a.design||{};
+ return `<h3>Library notes${a.confidence=='low'?' (low confidence)':''}</h3><div class="note" style="border-left-color:var(--ok);font-size:15px">${esc(a.oneLiner)}</div>
+ <div class="sec"><h4>Positioning <span class="chip blue">${esc(p.type)}</span></h4>${row('Audience',p.audience)}${row('Promise',p.promise)}${row('Angle',p.angle)}${row('Proof',p.proof)}${row('Why it works',p.whyItWorks)}</div>
+ <div class="sec"><h4>Hero line <span class="chip blue">${esc(h.headlineType)}</span></h4><div class="q">“${esc(h.headline)}”</div>${row('Formula',h.formula)}${row('Subline job',h.sublineJob)}${row('CTA',h.cta)}${row('First screen',h.layout)}${row('Why it works',h.whyItWorks)}</div>
+ <div class="sec"><h4>Page structure <span class="chip blue">${esc(pg.type)}</span></h4><ol class="flow">${(pg.flow||[]).map(x=>`<li><b>${esc(x.section)}</b> — ${esc(x.job)} <i>(${esc(x.form)})</i></li>`).join('')}</ol>${row('Rhythm',pg.rhythm)}${row('Why it works',pg.whyItWorks)}</div>
+ <div class="sec"><h4>Design <span class="chip blue">${esc(d.theme)}</span> ${(d.vibe||[]).map(v=>`<span class="chip">${esc(v)}</span>`).join('')}</h4><p style="margin:6px 0">${esc(d.summary)}</p>${row('Colour',d.colourStory)}${row('Type',d.typeFeel)}${row('Layout',d.layoutFeel)}${row('Backgrounds',d.backgrounds)}${row('Icons & imagery',d.iconsAndImagery)}${row('Motion',d.motionFeel)}
+  <b>Signature elements</b>${li(d.signatureElements)}<b>How they make it look good</b>${li(d.techniquesThatMakeItLookGood)}${row('Do not copy',d.whatNotToCopy)}</div>
+ <div class="sec"><h4>What to steal</h4>${li(a.steal)}${row('Best reference for',a.bestFor)}</div>
+ <div class="sec"><div class="row" style="justify-content:space-between"><h4 style="margin:0">Design prompt for your AI</h4><button id="dp">Copy prompt</button></div><pre class="pre">${esc(a.designPrompt)}</pre></div>
+ ${(s.samNotes||[]).length?`<div class="sec"><h4>Your notes (Obsidian)</h4>${li(s.samNotes)}</div>`:''}`}
 function open(id){
   const s=S.find(x=>x.id==id),f=s.capture?.facts||{},c=C(id);
   const sw=(v)=>v?`<span class="sw" style="background:${v}"></span>${esc(v)}`:'—';
@@ -98,7 +126,9 @@ function open(id){
   <select id="st">${STAT.map(x=>`<option ${c.status==x?'selected':''}>${x}</option>`).join('')}</select>
   <input id="tg" placeholder="tags: hero, pricing, motion…" value="${esc(c.tags)}" style="flex:1"></div>
   <textarea id="nt" placeholder="What to steal from this site…" style="margin-top:8px">${esc(c.note)}</textarea>
-  ${s.insight?`<h3>Analysis (from the live page)</h3>
+  ${libBlock(s)}
+  <details class="tech"><summary>Technical details: auto-detected structure, measurements, design tokens</summary>
+  ${s.insight?`<h3>Auto-detected structure</h3>
   ${s.insight.flow?`<div style="margin-bottom:8px"><b>Section flow</b><div>${s.insight.flow.split(' → ').map(x=>`<span class="chip blue">${esc(x)}</span>`).join(' ')}</div></div>`:''}
   ${s.insight.design.length?`<div class="note"><b>Design</b><ul>${s.insight.design.map(x=>`<li>${esc(x)}</li>`).join('')}</ul></div>`:''}
   ${s.insight.positioning.length?`<div class="note"><b>Positioning</b><ul>${s.insight.positioning.map(x=>`<li>${esc(x)}</li>`).join('')}</ul></div>`:''}
@@ -106,7 +136,13 @@ function open(id){
   <div class="note" style="border-left-color:var(--ok)"><b>What your AI can take</b><ul>${s.insight.steal.map(x=>`<li>${esc(x)}</li>`).join('')}</ul></div>
   <div class="row" style="justify-content:space-between;margin-top:10px"><b>AI brief (paste into your AI)</b><button id="cb">Copy brief</button></div>
   <pre style="white-space:pre-wrap;background:var(--bg);border:1px solid var(--line);border-radius:8px;padding:10px;font-size:12.5px">${esc(s.insight.aiBrief)}</pre>
-  <div>${s.insight.tags.filter(t=>TAGNAME[t]).map(t=>`<span class="chip">${TAGNAME[t]}</span>`).join('')}</div>`:''}
+  <div>${s.insight.tags.filter(t=>tagName(t)).map(t=>`<span class="chip">${tagName(t)}</span>`).join('')}</div>`:''}
+  ${s.insight?.visual?(()=>{const v=s.insight.visual,ul=a=>a&&a.length?`<ul>${a.map(x=>`<li>${esc(x)}</li>`).join('')}</ul>`:'<div style="color:var(--mute)">—</div>';
+   return `<h3>Visual design details</h3><div>${v.look.map(x=>`<span class="chip blue">${esc(x)}</span>`).join('')}<span class="chip">Motion: ${esc(v.motionLevel)}</span></div>
+   <div style="margin:10px 0"><b>Shades</b> <span style="color:var(--mute);font-size:12px">(click to copy)</span><div class="row" style="margin-top:6px">${v.palette.map(p=>`<div class="sws" data-c="${esc(p.hex)}" title="${esc(p.css)}"><span style="background:${esc(p.css)}"></span><b>${esc(p.hex)}</b><i>${esc(p.role)}</i></div>`).join('')}</div></div>
+   <div class="note"><b>Backgrounds &amp; textures</b>${ul(v.backgrounds)}</div><div class="note"><b>Layout &amp; sizing</b>${ul(v.layout)}</div><div class="note"><b>Shape: radius, borders, shadows</b>${ul(v.shape)}</div>
+   <div class="note"><b>Typography</b>${ul(v.type)}</div><div class="note"><b>Icons</b>${ul(v.icons)}</div><div class="note"><b>Imagery</b>${ul(v.imagery)}</div><div class="note"><b>Motion</b>${ul(v.motion)}</div>
+   <div class="row" style="justify-content:space-between;margin-top:10px"><b>Design tokens (approx., paste into your AI)</b><button id="tk">Copy tokens</button></div><pre style="white-space:pre-wrap;background:var(--bg);border:1px solid var(--line);border-radius:8px;padding:10px;font-size:12.5px">${esc(v.tokens)}</pre>`})():''}
   ${f.h1||f.title?`<h3>Live on the site (captured ${'today'})</h3><div class="kv">
   ${kv('Headline',esc(f.h1))}${kv('Subline',esc(f.sub))}${kv('Meta desc.',esc(f.description))}${kv('CTAs',esc((f.cta||[]).join(' · ')))}${kv('Nav',esc((f.nav||[]).join(' · ')))}${kv('Sections',esc((f.h2||[]).join(' › ')))}
   ${kv('Fonts',esc([f.headingFont,f.bodyFont].filter((v,i,a)=>v&&a.indexOf(v)==i).join(' / ')+(f.h1Size?` · H1 ${f.h1Size}px`:'')))}${kv('Theme',esc(f.theme))}${kv('Background',sw(f.bg))}${kv('Accent btn',sw(f.accent))}${kv('Page height',f.pageHeight?f.pageHeight+'px':'')}</div>`:''}
@@ -114,9 +150,12 @@ function open(id){
   ${s.positioning||s.design||s.copy?`<h3>Research notes — from your pasted list, not verified</h3>
   ${s.positioning?`<div class="note unv"><b>Positioning</b><br>${esc(s.positioning)}</div>`:''}${s.design?`<div class="note unv"><b>Design</b><br>${esc(s.design)}</div>`:''}${s.copy?`<div class="note unv"><b>Copy</b><br>${esc(s.copy)}</div>`:''}
   <div style="color:var(--mute);font-size:12px">These can be stale (e.g. sites re-brand). Compare with "Live on the site" above.</div>`:''}
-  </div>`;
+  </details></div>`;
   $('#dr').classList.add('open');
+  if($('#dp'))$('#dp').onclick=async()=>{try{await navigator.clipboard.writeText(A(s).designPrompt);$('#dp').textContent='Copied ✓'}catch(e){}};
   $('#x').onclick=()=>$('#dr').classList.remove('open');
+  document.querySelectorAll('.sws').forEach(e=>e.onclick=async()=>{try{await navigator.clipboard.writeText(e.dataset.c);e.querySelector('i').textContent='copied'}catch(x){}});
+  if($('#tk'))$('#tk').onclick=async()=>{try{await navigator.clipboard.writeText(s.insight.visual.tokens);$('#tk').textContent='Copied ✓'}catch(e){}};
   if($('#cb'))$('#cb').onclick=async()=>{try{await navigator.clipboard.writeText(s.insight.aiBrief);$('#cb').textContent='Copied ✓'}catch(e){$('#cb').textContent='Select and copy manually'}};
   $('#stars').onclick=e=>{const r=+e.target.dataset.r;if(!r)return;c.rating=c.rating==r?0:r;save();open(id);render()};
   $('#st').onchange=e=>{c.status=e.target.value;save();render()};
